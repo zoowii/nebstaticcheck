@@ -1,0 +1,24 @@
+{
+  "name": "nebstaticcheck",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "zoowii",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "^16.2.2",
+    "estree-walker": "^0.5.2",
+    "flow-bin": "^0.74.0",
+    "flow-parser": "^0.74.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "koa": "^2.5.1",
+    "koa-bodyparser": "^4.2.1",
+    "uuid": "^3.2.1"
+  }
+}
