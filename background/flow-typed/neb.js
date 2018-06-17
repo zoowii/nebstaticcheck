@@ -1,14 +1,14 @@
 import BigNumber from 'bignumber.js';
 
 
-interface LocalContractStorageInterface {
+declare interface LocalContractStorageInterface {
     defineMapProperty: Function,
     defineProperties: Function,
     defineMapProperties: Function,
     defineProperty: Function
 }
 
-interface TransactionInterface {
+declare interface TransactionInterface {
     from: string,
     to: string,
     value: BigNumber,
@@ -19,13 +19,13 @@ interface TransactionInterface {
     gasPrice: number
 }
 
-interface BlockInterface {
+declare interface BlockInterface {
     height: number,
     timestamp: number,
     seed: number
 }
 
-interface BlockchainInterface {
+declare interface BlockchainInterface {
     transaction: TransactionInterface,
     block: BlockInterface,
     verifyAddress: (string) => number,
@@ -35,7 +35,7 @@ interface BlockchainInterface {
     transfer: (string, BigNumber) => boolean
 }
 
-interface EventInterface {
+declare interface EventInterface {
     Trigger: (string, any) => void
 }
 
