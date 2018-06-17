@@ -1,14 +1,14 @@
 import BigNumber from 'bignumber.js';
 
 
-declare interface LocalContractStorageInterface {
+declare class LocalContractStorageInterface {
     defineMapProperty: Function,
     defineProperties: Function,
     defineMapProperties: Function,
     defineProperty: Function
 }
 
-declare interface TransactionInterface {
+declare class TransactionInterface {
     from: string,
     to: string,
     value: BigNumber,
@@ -19,28 +19,28 @@ declare interface TransactionInterface {
     gasPrice: number
 }
 
-declare interface BlockInterface {
+declare class BlockInterface {
     height: number,
     timestamp: number,
     seed: number
 }
 
-declare interface BlockchainInterface {
+declare class BlockchainInterface {
     transaction: TransactionInterface,
     block: BlockInterface,
-    verifyAddress: (string) => number,
-    getAccountState: (string) => any,
-    getPreBlockHash: (number) => string,
-    getPreBlockSeed: (number) => string,
-    transfer: (string, BigNumber) => boolean
+    verifyAddress(string): number,
+    getAccountState(string): any,
+    getPreBlockHash(number): string,
+    getPreBlockSeed(number): string,
+    transfer(string, BigNumber): boolean
 }
 
-declare interface EventInterface {
-    Trigger: (string, any) => void
+declare class NebEventInterface {
+    Trigger(string, any): void
 }
 
 // TODO: crypto
 
 declare var LocalContractStorage: LocalContractStorageInterface;
 declare var Blockchain: BlockchainInterface;
-declare var Event: EventInterface;
+declare var Event: any; // NebEventInterface;
