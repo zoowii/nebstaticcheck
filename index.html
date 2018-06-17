@@ -31,14 +31,19 @@
     <div class="">
         <div class="row">
             <div class="col-2" id="contract-structure-panel">
-                <div>
-                    <span>合约Storage</span>
+                <div style="margin-top: 30px;"></div>
+                <div class="card" style="width: 100%;">
+                    <div class="card-header">
+                        合约Storage
+                    </div>
                     <ul class="list-group contract-storages-list">
                         <li class="list-group-item">暂无，请在右侧面板点击静态检查</li>
                     </ul>
                 </div>
-                <div>
-                    <span>合约API</span>
+                <div class="card" style="width: 100%; margin-top: 30px;">
+                    <div class="card-header">
+                        合约API
+                    </div>
                     <ul class="list-group contract-api-list">
                         <li class="list-group-item">暂无，请在右侧面板点击静态检查</li>
                     </ul>
@@ -54,7 +59,7 @@
                             left: 0;"></div>
             </div>
             <div class="col-2" id="app" style="text-align: center;">
-                <h3>{{name}}</h3>
+                <h3 style="margin-top: 30px;">{{title}}</h3>
                 <div class="alert alert-success" role="alert" v-if="currentUserAddress">
                     当前用户:
                     <a :href="explorerUrlForAddress(currentUserAddress)" target="_blank">{{currentUserAddress}}</a>
