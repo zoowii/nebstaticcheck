@@ -15,6 +15,7 @@
     "flow-parser": "^0.74.0"
   },
   "dependencies": {
+    "bignumber": "^1.1.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "koa": "^2.5.1",
