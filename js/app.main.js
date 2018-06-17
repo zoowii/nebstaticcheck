@@ -182,7 +182,7 @@ var app = new Vue({
         return {
             name: 'nebcontractchecker',
             title: '星云合约静态检查工具',
-            repoUrl: 'https://coding.net/u/zoowii/p/nebstaticcheck/git',
+            repoUrl: 'https://github.com/zoowii/nebstaticcheck',
             flowUrl: 'http://120.55.52.74:3000/flow',
             nebExtensionInstalled: true,
             authorAddress: authorAddress,
