@@ -12,6 +12,7 @@ static checker for nebulas javascript smart contract
 * `npm install`
 * `npm install -g browserify flow-bin`
 * `browserify index.js -o js/nebcheck.bundle.js`
+* cd to `background` and run `flow start` and run `node index.js`
 
 # Usage
 

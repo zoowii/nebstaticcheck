@@ -212,12 +212,14 @@ var app = new Vue({
             loading: true,
 
             checkError: '',
-            isTypeScript: false,
+            isTypeScript: true,
+            showMyContractsDialog: false,
+            myContracts: [],
         };
     },
     watch: {
         isTypeScript(val) {
-            if(this.isTypeScript) {
+            if (this.isTypeScript) {
                 this.editor.session.setMode("ace/mode/typescript");
             } else {
                 this.editor.session.setMode("ace/mode/javascript");
@@ -246,6 +248,9 @@ var app = new Vue({
 
                         window.currentUserAddress = self.currentUserAddress;
                         self.simulateFromAddress = self.currentUserAddress;
+                        if (self.currentUserAddress) {
+                            self.loadMyContracts(self.currentUserAddress)
+                        }
                     }
                 }
             });
@@ -256,7 +261,7 @@ var app = new Vue({
         editor.setTheme("ace/theme/monokai");
         editor.session.setMode("ace/mode/javascript");
         editor.resize()
-        this.newContractSource()
+        this.newContractSource(null)
         this.checkContractSource()
     },
     methods: {
@@ -323,35 +328,20 @@ var app = new Vue({
         updateCurrentUserAddress: function () {
             if (window.currentUserAddress) {
                 this.currentUserAddress = window.currentUserAddress;
-                if (this.searchMerchantsForm) {
-                    this.searchMerchantsForm.address = this.currentUserAddress;
+                if (this.currentUserAddress) {
+                    this.loadMyContracts()
                 }
             }
         },
-        createMerchant: function () {
-            if (!this.createMerchantForm.name || this.createMerchantForm.name.length < 5) {
-                return this.showErrorInfo("商户名称需要至少5位字符");
+        loadMyContracts: function () {
+            if (!this.currentUserAddress) {
+                return;
             }
-            var value = "0";
-            var gasPrice = "1000000";
-            var gasLimit = "2000000";
-            var self = this;
-            callOnChainTx(this.simulateFromAddress, this.dappAddress, value, '0', gasPrice, gasLimit, 'createMerchant',
-                JSON.stringify([this.createMerchantForm.name, this.createMerchantForm.description, this.createMerchantForm.url, this.createMerchantForm.callbackUrl]),
-                function (data) {
-                    self.showSuccessInfo("创建商户成功");
-                    self.createMerchantForm = {};
-                    self.curTabIndex = 'my_orders';
-                }, function (data) {
-                    self.updateCurrentUserAddress();
-                }, this.showErrorInfo);
-        },
-        listMerchants: function () {
             var value = "0";
             var gasPrice = "1000000"
             var gasLimit = "2000000"
-            var callFunction = "getMerchantList";
-            var callArgs = JSON.stringify([]);
+            var callFunction = "getConfigOfUser";
+            var callArgs = JSON.stringify([this.currentUserAddress]);
             var contract = {
                 "function": callFunction,
                 "args": callArgs
@@ -366,62 +356,16 @@ var app = new Vue({
                 }
                 var result = JSON.parse(resp.result);
                 if (!result) {
-                    throw new Error("访问商户列表出错");
+                    self.myContracts = []
+                    return
                 }
-                result.sort(function (a, b) {
-                    // 特殊排序
-                    if (a.name === '星云简单付' && b.name !== a.name) {
-                        return -1;
-                    }
-                    if (b.name === '星云简单付' && b.name !== a.name) {
-                        return 1;
-                    }
-                    if (a.name === '星云第三方开发社区' && b.name !== a.name) {
-                        return -1;
-                    }
-                    if (b.name === '星云第三方开发社区' && b.name !== a.name) {
-                        return 1;
-                    }
+                self.myContracts = []
+                for (let contractName in result.contractSources) {
+                    self.myContracts.push(result.contractSources[contractName])
+                }
+                self.myContracts.sort(function (a, b) {
                     return b.time - a.time;
                 });
-                self.allMerchantList = result;
-            }).catch(function (err) {
-                self.showErrorInfo(err.message);
-            });
-        },
-        listMerchantsUserCreated: function (address) {
-            if (!address) {
-                return this.showErrorInfo("地址格式错误");
-            }
-            var value = "0";
-            var gasPrice = "1000000"
-            var gasLimit = "2000000"
-            var callFunction = "getUserCreatedMerchantList";
-            var callArgs = JSON.stringify([address]);
-            var contract = {
-                "function": callFunction,
-                "args": callArgs
-            }
-            var self = this;
-            this.loading = true
-            neb.api.call(this.simulateFromAddress, this.dappAddress, value, '0', gasPrice, gasLimit, contract).then(function (resp) {
-                self.loading = false
-                console.log(resp);
-                if (resp.execute_err.length > 0) {
-                    throw new Error(resp.execute_err);
-                }
-                var result = JSON.parse(resp.result);
-                if (!result) {
-                    throw new Error("访问商户列表出错");
-                }
-                result.sort(function (a, b) {
-                    if (a.agreeCount !== b.agreeCount) {
-                        return b.agreeCount - a.agreeCount;
-                    } else {
-                        return b.time - a.time;
-                    }
-                });
-                self.userCreatedMerchantsList = result;
             }).catch(function (err) {
                 self.showErrorInfo(err.message);
             });
@@ -459,57 +403,8 @@ var app = new Vue({
         weiToNas: function (value) {
             return (new BigNumber(value).div(new BigNumber(1000000000000000000))).toString();
         },
-        orderRemainingToPayAddresses: function (order) {
-            // 收款订单的未支付的收款人列表
-            var result = [];
-            for (var i = 0; i < order.toReceiveUserAddresses.length; i++) {
-                var addr = order.toReceiveUserAddresses[i];
-                if (!order.receivedAmountsOfEachPerson[addr]) {
-                    result.push(addr);
-                }
-            }
-            return result;
-        },
-        listOrdersUserJoined: function (address) {
-            if (!address) {
-                if (this.currentUserAddress) {
-                    address = this.currentUserAddress;
-                }
-                if (!address) {
-                    return this.showErrorInfo("地址格式错误");
-                }
-            }
-            var value = "0";
-            var gasPrice = "1000000"
-            var gasLimit = "2000000"
-            var callFunction = "getOrderListJoinedByUser";
-            var callArgs = JSON.stringify([address]);
-            var contract = {
-                "function": callFunction,
-                "args": callArgs
-            }
-            var self = this;
-            this.loading = true
-            neb.api.call(this.simulateFromAddress, this.dappAddress, value, '0', gasPrice, gasLimit, contract).then(function (resp) {
-                self.loading = false
-                console.log(resp);
-                if (resp.execute_err.length > 0) {
-                    throw new Error(resp.execute_err);
-                }
-                var result = JSON.parse(resp.result);
-                if (!result) {
-                    throw new Error("访问用户订单列表出错");
-                }
-                result.sort(function (a, b) {
-                    return b.time - a.time;
-                });
-                self.myOrders = result;
-            }).catch(function (err) {
-                self.showErrorInfo(err.message);
-            });
-        },
-        isMyMerchant: function (merchant) {
-            return this.currentUserAddress && merchant && this.currentUserAddress === merchant.creatorAddress;
+        toSelectContractSource() {
+            this.showMyContractsDialog = true
         },
         saveContractSource: function () {
             // 保存合约源码
@@ -538,7 +433,7 @@ var app = new Vue({
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 inputPattern: /\w[\w\d]*/,
-                inputErrorMessage: '文件名称不正确'
+                inputErrorMessage: '文件名称不正确',
             }).then((data) => {
                 sendTx(data.value);
             }).catch(() => {
@@ -548,11 +443,20 @@ var app = new Vue({
                 });
             });
         },
-        
-        newContractSource() {
+        openContractSource(contractInfo) {
+            this.openedContractName = contractInfo.name
+            let code = contractInfo.source
+            this.showMyContractsDialog = false
+            this.newContractSource(code)
+            this.checkContractSource()
+        },
+        newContractSource(source) {
             this.checkError = ''
             let editor = this.editor
-            let code = `
+            if (!source) {
+                this.openedContractName = ''
+            }
+            let code = source || `
 function Item(text) {
     if(text) {
         let obj = JSON.parse(text)
@@ -568,12 +472,12 @@ Item.prototype = {
 }
 
 function ContractService() {
-    // TODO
+    // Demo
     LocalContractStorage.defineProperties(this, {
         _name: null,
     })
     /*
-    TODO
+    Demo
     LocalContractStorage.defineMapProperties(this, {
         "balances": {
             parse: function (value) {
@@ -599,7 +503,7 @@ function ContractService() {
 
 ContractService.prototype = {
     init: function() {
-        this._name = 'TODO'
+        this._name = 'Demo'
         this._age = 123 // ERROR
     },
 }
@@ -612,7 +516,7 @@ module.exports = ContractService
             let editor = this.editor
             let code = editor.getValue()
             try {
-                // TODO: 远程调用flow.js做静态检查
+                // 远程调用flow.js做静态检查
                 let checkState = nebchecker.checkContract(code)
                 console.log(checkState)
                 if (checkState.errors.length > 0) {
@@ -649,24 +553,24 @@ module.exports = ContractService
                 if (apisCount < 1) {
                     $apisList.append(`<li class="list-group-item">暂无</li>`)
                 }
-                if(this.isTypeScript) {
-                axios.post(this.flowUrl, { contract: code })
-                    .then(d => {
-                        let data = d.data
-                        if (data.error) {
-                            if (self.checkError === '无错误') {
-                                self.checkError = ''
-                            }
-                            let errorPrefix = 'Error -----------------------------------------------------------------------------------------------------------'
-                            let errorLines = data.error.split('\n')
-                            for(let errLine of errorLines) {
-                                if(errLine.indexOf(errorPrefix)===0) {
-                                    errLine = errLine.substring(errorPrefix.length)
+                if (this.isTypeScript) {
+                    axios.post(this.flowUrl, { contract: code })
+                        .then(d => {
+                            let data = d.data
+                            if (data.error) {
+                                if (self.checkError === '无错误') {
+                                    self.checkError = ''
                                 }
-                                self.checkError += `<p>${errLine}</p>`
+                                let errorPrefix = 'Error -----------------------------------------------------------------------------------------------------------'
+                                let errorLines = data.error.split('\n')
+                                for (let errLine of errorLines) {
+                                    if (errLine.indexOf(errorPrefix) === 0) {
+                                        errLine = errLine.substring(errorPrefix.length)
+                                    }
+                                    self.checkError += `<p>${errLine}</p>`
+                                }
                             }
-                        }
-                    });
+                        });
                 }
 
             } catch (e) {

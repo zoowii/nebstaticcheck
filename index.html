@@ -63,16 +63,26 @@
                     <a :href="repoUrl" target="_blank">源码</a>
                 </div>
                 <button type="button" class="btn btn-primary btn-sm" @click="loginToDapp">登陆</button>
-                <!-- <button type="button" class="btn btn-default btn-sm">选择合约</button> -->
-                <button type="button" class="btn btn-primary btn-sm" @click="newContractSource">新建合约</button>
+                <button type="button" class="btn btn-default btn-sm" @click="toSelectContractSource">选择合约</button>
+                <button type="button" class="btn btn-primary btn-sm" @click="newContractSource(null)">新建合约</button>
                 <button type="button" class="btn btn-default btn-sm" @click="saveContractSource">保存合约</button>
 
+
+                <el-dialog title="合约文件" :visible.sync="showMyContractsDialog">
+                    <el-table :data="myContracts">
+                        <el-table-column property="name" label="文件名" width="400"></el-table-column>
+                        <el-table-column fixed="right" label="操作" width="200">
+                            <template slot-scope="scope">
+                                <el-button @click="openContractSource(scope.row)" type="text" size="small">选择</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-dialog>
+
                 <div style="margin: 20px 0;">
-                     语法: JavaScript   <el-switch
-                        v-model="isTypeScript"
-                        active-color="#13ce66"
-                        inactive-color="#ff4949">
-                      </el-switch> TypeScript
+                    语法: JavaScript
+                    <el-switch v-model="isTypeScript" active-color="#13ce66" inactive-color="#ff4949">
+                    </el-switch> TypeScript
                 </div>
                 <button type="button" class="btn btn-danger btn-sm" @click="checkContractSource">静态检查</button>
                 <div style="margin-top: 20px;">
@@ -84,7 +94,7 @@
     </div>
     <script src="./js/app.bundle.js?v=2"></script>
     <script src="js/nebcheck.bundle.js?v=1"></script>
-    <script src="./js/app.main.js?v=4"></script>
+    <script src="./js/app.main.js?v=5"></script>
 </body>
 
 </html>
