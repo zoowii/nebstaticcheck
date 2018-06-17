@@ -30,8 +30,8 @@ interface BlockchainInterface {
     block: BlockInterface,
     verifyAddress: (string) => number,
     getAccountState: (string) => any,
-    getPreBlockHash: (offset) => string,
-    getPreBlockSeed: (offset) => string,
+    getPreBlockHash: (number) => string,
+    getPreBlockSeed: (number) => string,
     transfer: (string, BigNumber) => boolean
 }
 
