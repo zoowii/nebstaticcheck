@@ -429,7 +429,7 @@ var app = new Vue({
                         self.updateCurrentUserAddress();
                     }, self.showErrorInfo);
             }
-            this.$prompt('只有此商户的创建者可以发起收款订单，请在钱包中切换用户后操作', '提示', {
+            this.$prompt('请输入合约文件名', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 inputPattern: /\w[\w\d]*/,
