@@ -476,8 +476,23 @@ function ContractService() {
     LocalContractStorage.defineProperties(this, {
         _name: null,
     })
-    /*
-    Demo
+    LocalContractStorage.defineProperty(this, 'p1', null)
+    LocalContractStorage.defineProperty(this, 'p2', {
+        parse: function (value) {
+            return new Item(value);
+        },
+        stringify (o) {
+            return o.toString();
+        }
+    })
+    LocalContractStorage.defineProperty(this, 'p3', {
+        parse: function (value) {
+            return new BigNumber(value);
+        },
+        stringify (o) {
+            return new BigNumber(o) // error, storage stringify return type must be string
+        }
+    })
     LocalContractStorage.defineMapProperties(this, {
         "balances": {
             parse: function (value) {
@@ -498,13 +513,16 @@ function ContractService() {
     })
     LocalContractStorage.defineProperty(this, 'config', null)
     LocalContractStorage.defineMapProperty(this, 'configMap', null)
-    */
+    
 }
 
 ContractService.prototype = {
     init: function() {
         this._name = 'Demo'
         this._age = 123 // ERROR
+    },
+    hello(name) {
+        return 'world' + name
     },
 }
 module.exports = ContractService          
@@ -545,9 +563,19 @@ module.exports = ContractService
                 }
                 let apisCount = 0
                 for (let contractApiName in checkState.contractApis) {
-                    // TODO: args
+                    let apiFunc = checkState.contractApis[contractApiName]
+                    let apiParams = []
+                    if(apiFunc && apiFunc.params) {
+                        for(let p of apiFunc.params) {
+                            if(p && p.name) {
+                                apiParams.push(p.name)
+                            } else {
+                                apiParams.push('object')
+                            }
+                        }
+                    }
                     apisCount++
-                    let $item = $(`<li class="list-group-item">${contractApiName}</li>`)
+                    let $item = $(`<li class="list-group-item">${contractApiName}(${apiParams.join(',')})</li>`)
                     $apisList.append($item)
                 }
                 if (apisCount < 1) {
