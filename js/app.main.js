@@ -215,6 +215,8 @@ var app = new Vue({
             isTypeScript: true,
             showMyContractsDialog: false,
             myContracts: [],
+            checkState: null,
+            toRunApiName: null,
         };
     },
     watch: {
@@ -518,10 +520,14 @@ function ContractService() {
 
 ContractService.prototype = {
     init: function() {
+        console.log('hi, init')
+        console.log('nebulas, contract')
         this._name = 'Demo'
         this._age = 123 // ERROR
     },
     hello(name) {
+        console.log('hi')
+        console.log('nebulas')
         return 'world' + name
     },
 }
@@ -534,8 +540,8 @@ module.exports = ContractService
             let editor = this.editor
             let code = editor.getValue()
             try {
-                // 远程调用flow.js做静态检查
                 let checkState = nebchecker.checkContract(code)
+                this.checkState = checkState
                 console.log(checkState)
                 if (checkState.errors.length > 0) {
                     let errorBuilder = ''
@@ -562,12 +568,14 @@ module.exports = ContractService
                     $storagesList.append(`<li class="list-group-item">暂无</li>`)
                 }
                 let apisCount = 0
+                let contractApiInfos = []
+                let contractApiMapping = {}
                 for (let contractApiName in checkState.contractApis) {
                     let apiFunc = checkState.contractApis[contractApiName]
                     let apiParams = []
-                    if(apiFunc && apiFunc.params) {
-                        for(let p of apiFunc.params) {
-                            if(p && p.name) {
+                    if (apiFunc && apiFunc.params) {
+                        for (let p of apiFunc.params) {
+                            if (p && p.name) {
                                 apiParams.push(p.name)
                             } else {
                                 apiParams.push('object')
@@ -577,6 +585,18 @@ module.exports = ContractService
                     apisCount++
                     let $item = $(`<li class="list-group-item">${contractApiName}(${apiParams.join(',')})</li>`)
                     $apisList.append($item)
+                    let info = {
+                        name: contractApiName,
+                        args: apiParams,
+                    }
+                    contractApiMapping[contractApiName] = info
+                    contractApiInfos.push(info)
+                }
+                checkState.contractApiInfos = contractApiInfos
+                checkState.contractApiMapping = contractApiMapping
+                checkState.inputedApiArgs = {}
+                if (this.toRunApiName && !checkState.contractApis[this.toRunApiName]) {
+                    this.toRunApiName = null
                 }
                 if (apisCount < 1) {
                     $apisList.append(`<li class="list-group-item">暂无</li>`)
@@ -604,6 +624,56 @@ module.exports = ContractService
             } catch (e) {
                 this.checkError = e.message
             }
+        },
+        runContractApiLocally() {
+            if (!this.toRunApiName) {
+                return this.showErrorInfo("Please select api to run")
+            }
+            let self = this
+            let editor = this.editor
+            let code = editor.getValue()
+            let args = []
+            let argNames = this.checkState.contractApiMapping[this.toRunApiName].args
+            for (let argName of argNames) {
+                args.push(this.checkState.inputedApiArgs[argName])
+            }
+            var block = {
+                timestamp: 0,
+                height: 1
+            }
+
+            var transaction = {
+                hash: "2933836c3a56ddd789464c7bd3fd92bdb1c974ac62f7b38a34bc48eb33679f52",
+                from: "n1dAmstUGQ3YB4EVokmRdrvvVCNfJVU5WuS",
+                to: "n1dAmstUGQ3YB4EVokmRdrvvVCNfJVU5WuS",
+                value: "10",
+                nonce: 1,
+                timestamp: 1527077193,
+                gasPrice: "1000000",
+                gasLimit: "20000"
+            }
+            let nvm = new nebulas.NVM(block, transaction)
+            console.log('args: ', args)
+            let res = undefined
+            let oldLog = console.log
+            let logBuilder = ''
+            console.log = function (data) {
+                logBuilder += data + '\n'
+            }
+            try {
+                if (this.toRunApiName === 'init') {
+                    res = nvm.deploy(code, JSON.stringify(args))
+                } else {
+                    res = nvm.run(code, this.toRunApiName, JSON.stringify(args))
+                }
+            } finally {
+                console.log = oldLog
+            }
+            let resStr = '' + res
+            let html = `<div><p>Result: <br/>${resStr.replace('\n', '<br/>')}</p><p>Logs: <br/><code>${logBuilder.replace('\n', '<br/>')}</code></p></div>`
+            this.$alert(html, 'Execute Result', {
+                dangerouslyUseHTMLString: true
+              })
         },
         loginToDapp: function () {
             var self = this

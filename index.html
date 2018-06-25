@@ -22,7 +22,8 @@
     <script src="https://ajaxorg.github.io/ace-builds/src-noconflict/ace.js"></script>
     <!-- <script src="https://ace.c9.io/build/src-noconflict/ace.js"></script> -->
     <script src="js/lib/bignumber.min.js"></script>
-    <script src=lib/nebulas.js></script>
+    <!-- <script src=lib/nebulas.js></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/nebulas@0.5.2/dist/nebulas.js"></script>
     <script src=lib/nebPay.js></script>
     <script src=lib/bootstrap-4.0.0-dist/js/bootstrap.min.js></script>
     <script src=lib/jquery.qrcode.min.js data-depends=jquery></script>
@@ -85,6 +86,23 @@
                     </el-table>
                 </el-dialog>
 
+                <div style="margin-top: 20px;" v-if="checkState && checkState.contractApiInfos">
+                    <el-select v-model="toRunApiName" placeholder="请选择">
+                        <el-option v-for="apiInfo in checkState.contractApiInfos" :key="apiInfo.name" :label="apiInfo.name" :value="apiInfo.name">
+                        </el-option>
+                    </el-select>
+                    <div v-if="toRunApiName && checkState && checkState.contractApiMapping && checkState.contractApiMapping[toRunApiName]">
+                        <div v-for="argName in checkState.contractApiMapping[toRunApiName].args" :key="argName">
+                            <el-input placeholder="请输入参数" v-model="checkState.inputedApiArgs[argName]">
+                                <template slot="prepend">{{argName}}</template>
+                            </el-input>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <el-button size="mini" round type="primary" @click="runContractApiLocally">Run Api</el-button>
+                    </div>
+                </div>
+
                 <div style="margin: 20px 0;">
                     语法: JavaScript
                     <el-switch v-model="isTypeScript" active-color="#13ce66" inactive-color="#ff4949">
@@ -100,7 +118,7 @@
     </div>
     <script src="./js/app.bundle.js?v=2"></script>
     <script src="js/nebcheck.bundle.js?v=2"></script>
-    <script src="./js/app.main.js?v=6"></script>
+    <script src="./js/app.main.js?v=7"></script>
 </body>
 
 </html>
