@@ -10,9 +10,9 @@ static checker for nebulas javascript smart contract
 # Build
 
 * `npm install`
-* `npm install -g browserify flow-bin`
+* `npm install -g browserify flow-bin pm2`
 * `browserify index.js -o js/nebcheck.bundle.js`
-* cd to `background` and run `flow start` and run `node index.js`
+* cd to `background` and run `flow start` and run `pm2 start index.js --name "nebstaticcheck-backend"`
 
 # Usage
 

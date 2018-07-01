@@ -183,7 +183,7 @@ var app = new Vue({
             name: 'nebcontractchecker',
             title: '星云合约静态检查工具',
             repoUrl: 'https://github.com/zoowii/nebstaticcheck',
-            flowUrl: 'http://120.55.52.74:3000/flow',
+            flowUrl: 'http://qcloud.blockdancer.com:3000/flow',
             nebExtensionInstalled: true,
             authorAddress: authorAddress,
             dappAuthorAccount: dappAuthorAccount,
